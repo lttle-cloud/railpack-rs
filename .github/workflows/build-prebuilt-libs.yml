@@ -1,9 +1,6 @@
 name: Build Prebuilt Libraries
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
@@ -16,7 +13,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential
@@ -44,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Build darwin-arm64 library
         run: ./scripts/build-darwin-arm64.sh
