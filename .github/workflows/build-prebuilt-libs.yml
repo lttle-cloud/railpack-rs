@@ -1,0 +1,77 @@
+name: Build Prebuilt Libraries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Build linux-amd64 library
+        run: |
+          mkdir -p prebuilt/linux-amd64
+          cd src
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -buildmode=c-archive -o ../prebuilt/linux-amd64/librailpack.a railpack.go
+
+      - name: Upload linux-amd64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-amd64
+          path: |
+            prebuilt/linux-amd64/librailpack.a
+            prebuilt/linux-amd64/librailpack.h
+
+  build-darwin-arm64:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build darwin-arm64 library
+        run: ./scripts/build-darwin-arm64.sh
+
+      - name: Upload darwin-arm64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: darwin-arm64
+          path: |
+            prebuilt/darwin-arm64/librailpack.a
+            prebuilt/darwin-arm64/librailpack.h
+
+  combine-artifacts:
+    needs: [build-linux-amd64, build-darwin-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create combined archive
+        run: |
+          mkdir -p prebuilt
+          cp -r artifacts/linux-amd64 prebuilt/
+          cp -r artifacts/darwin-arm64 prebuilt/
+          tar -czf prebuilt-libraries.tar.gz prebuilt/
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuilt-all-platforms
+          path: prebuilt-libraries.tar.gz
