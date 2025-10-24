@@ -41,6 +41,7 @@ func allocStringArray(strings []string) **C.char {
 	return (**C.char)(ptr)
 }
 
+//export rp_generate_build_plan
 func rp_generate_build_plan(config *C.RpConfig) *C.RpBuildResult {
 	if config == nil {
 		return nil
@@ -181,6 +182,7 @@ func convertBuildResult(br *rl.BuildResult) *C.RpBuildResult {
 	return result
 }
 
+//export rp_mem_free
 func rp_mem_free(ptr unsafe.Pointer) {
 	if ptr != nil {
 		C.free(ptr)
